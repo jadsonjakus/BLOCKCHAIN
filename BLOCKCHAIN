@@ -1,0 +1,93 @@
+# Importar as bibliotecas hashlib e time
+import hashlib
+import time
+
+# Definir uma classe Block que representa um bloco do blockchain
+class Block:
+    # O construtor da classe recebe os seguintes parâmetros:
+    # - index: o índice do bloco no blockchain
+    # - data: os dados do bloco
+    # - previous_hash: o hash do bloco anterior
+    # - timestamp: o tempo de criação do bloco
+    def __init__(self, index, data, previous_hash, timestamp=None):
+        # Atribuir os parâmetros aos atributos da classe
+        self.index = index
+        self.data = data
+        self.previous_hash = previous_hash
+
+        # Se o timestamp não for fornecido, usar o tempo atual
+        if timestamp is None:
+            self.timestamp = time.time()
+        else:
+            self.timestamp = timestamp
+
+        # Calcular o hash do bloco usando a função hash_block
+        self.hash = self.hash_block()
+
+    # Definir uma função hash_block que gera o hash do bloco usando o algoritmo SHA-256
+    def hash_block(self):
+        # Concatenar os atributos do bloco em uma string
+        block_string = str(self.index) + str(self.data) + str(self.previous_hash) + str(self.timestamp)
+
+        # Codificar a string em bytes
+        block_bytes = block_string.encode()
+
+        # Gerar o hash dos bytes usando a biblioteca hashlib
+        block_hash = hashlib.sha256(block_bytes).hexdigest()
+
+        # Retornar o hash como uma string
+        return block_hash
+
+    # Definir uma função __str__ que retorna uma representação em string do bloco
+    def __str__(self):
+        # Retornar uma string formatada com os atributos do bloco
+        return f"Block {self.index}\nData: {self.data}\nPrevious Hash: {self.previous_hash}\nHash: {self.hash}\nTimestamp: {self.timestamp}\n"
+
+# Definir uma classe Blockchain que representa o blockchain inteiro
+class Blockchain:
+    # O construtor da classe não recebe nenhum parâmetro
+    def __init__(self):
+        # Criar uma lista vazia para armazenar os blocos do blockchain
+        self.chain = []
+
+        # Criar o bloco gênesis (o primeiro bloco do blockchain) com dados arbitrários e adicionar à lista
+        genesis_block = Block(0, "Genesis Block", "0")
+        self.chain.append(genesis_block)
+
+    # Definir uma função add_block que adiciona um novo bloco ao blockchain com os dados fornecidos
+    def add_block(self, data):
+        # Obter o índice, o hash e o timestamp do último bloco da lista
+        last_block = self.chain[-1]
+        last_index = last_block.index
+        last_hash = last_block.hash
+        last_timestamp = last_block.timestamp
+
+        # Incrementar o índice em 1 para obter o índice do novo bloco
+        new_index = last_index + 1
+
+        # Criar um novo bloco com os dados fornecidos e o hash e o timestamp do último bloco
+        new_block = Block(new_index, data, last_hash, last_timestamp)
+
+        # Adicionar o novo bloco à lista
+        self.chain.append(new_block)
+
+    # Definir uma função __str__ que retorna uma representação em string do blockchain
+    def __str__(self):
+        # Criar uma string vazia para armazenar a representação do blockchain
+        blockchain_string = ""
+
+        # Para cada bloco na lista, adicionar a sua representação em string à string do blockchain
+        for block in self.chain:
+            blockchain_string += str(block) + "\n"
+
+        # Retornar a string do blockchain
+        return blockchain_string
+
+# Criar um blockchain de exemplo com alguns blocos
+example_blockchain = Blockchain()
+example_blockchain.add_block("Block 1")
+example_blockchain.add_block("Block 2")
+example_blockchain.add_block("Block 3")
+
+# Imprimir o conteúdo do blockchain de exemplo
+print(example_blockchain)

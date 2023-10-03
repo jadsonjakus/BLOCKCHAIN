@@ -1,0 +1,148 @@
+# Importar as bibliotecas face_recognition, cv2 e pickle
+import face_recognition
+import cv2
+import pickle
+
+# Definir uma função load_faces que carrega as faces conhecidas de um arquivo
+def load_faces(filename):
+    # Tentar abrir o arquivo em modo de leitura binária
+    try:
+        with open(filename, "rb") as file:
+            # Carregar os dados do arquivo usando a biblioteca pickle
+            data = pickle.load(file)
+            # Retornar os dados carregados
+            return data
+    # Se ocorrer algum erro, imprimir uma mensagem e retornar None
+    except Exception as e:
+        print(f"Erro ao carregar as faces: {e}")
+        return None
+
+# Definir uma função save_faces que salva as faces conhecidas em um arquivo
+def save_faces(filename, data):
+    # Tentar abrir o arquivo em modo de escrita binária
+    try:
+        with open(filename, "wb") as file:
+            # Salvar os dados no arquivo usando a biblioteca pickle
+            pickle.dump(data, file)
+            # Imprimir uma mensagem de sucesso
+            print(f"Faces salvas com sucesso em {filename}")
+    # Se ocorrer algum erro, imprimir uma mensagem
+    except Exception as e:
+        print(f"Erro ao salvar as faces: {e}")
+
+# Definir uma função add_face que adiciona uma nova face conhecida aos dados
+def add_face(data, name, image):
+    # Verificar se o nome já existe nos dados
+    if name in data:
+        # Imprimir uma mensagem de aviso
+        print(f"O nome {name} já existe nos dados")
+    # Se não existir, adicionar a nova face aos dados
+    else:
+        # Carregar a imagem da face usando a biblioteca face_recognition
+        face_image = face_recognition.load_image_file(image)
+        # Obter a codificação da face usando a biblioteca face_recognition
+        face_encoding = face_recognition.face_encodings(face_image)[0]
+        # Adicionar o nome e a codificação da face aos dados como uma chave-valor
+        data[name] = face_encoding
+        # Imprimir uma mensagem de sucesso
+        print(f"Face {name} adicionada com sucesso aos dados")
+
+# Definir uma função recognize_face que reconhece uma face desconhecida nos dados
+def recognize_face(data, image):
+    # Carregar a imagem da face usando a biblioteca face_recognition
+    face_image = face_recognition.load_image_file(image)
+    # Obter a codificação da face usando a biblioteca face_recognition
+    face_encoding = face_recognition.face_encodings(face_image)[0]
+    # Comparar a codificação da face com as codificações das faces conhecidas nos dados usando a biblioteca face_recognition
+    matches = face_recognition.compare_faces(list(data.values()), face_encoding)
+    # Se houver alguma correspondência, retornar o nome correspondente aos dados
+    if True in matches:
+        # Obter o índice da primeira correspondência na lista de correspondências
+        match_index = matches.index(True)
+        # Obter o nome correspondente aos dados usando o índice da correspondência
+        name = list(data.keys())[match_index]
+        # Retornar o nome encontrado
+        return name
+    # Se não houver nenhuma correspondência, retornar None
+    else:
+        return None
+
+# Definir o nome do arquivo que contém as faces conhecidas
+filename = "faces.dat"
+
+# Carregar as faces conhecidas do arquivo usando a função load_faces
+faces = load_faces(filename)
+
+# Se o arquivo não existir ou estiver vazio, criar um dicionário vazio para armazenar as faces
+if faces is None:
+    faces = {}
+
+# Imprimir uma mensagem com o número de faces conhecidas
+print(f"Número de faces conhecidas: {len(faces)}")
+
+# Imprimir uma mensagem com os nomes das faces conhecidas
+print(f"Nomes das faces conhecidas: {', '.join(faces.keys())}")
+
+# Adicionar algumas faces conhecidas aos dados usando a função add_face
+# Você pode comentar ou descomentar essas linhas conforme necessário
+add_face(faces, "luan", "images/luan.jpg")
+add_face(faces, "maria", "images/maria.jpg")
+add_face(faces, "joao", "images/joao.jpg")
+
+# Salvar as faces conhecidas no arquivo usando a função save_faces
+save_faces(filename, faces)
+
+# Capturar a imagem da câmera usando a biblioteca cv2
+# Você pode mudar o número 0 para outro se tiver mais de uma câmera
+camera = cv2.VideoCapture(0)
+
+# Verificar se a câmera está funcionando
+if camera.isOpened():
+    # Imprimir uma mensagem de sucesso
+    print("Câmera iniciada com sucesso")
+    # Entrar em um loop infinito
+    while True:
+        # Ler um quadro da câmera
+        ret, frame = camera.read()
+        # Verificar se a leitura foi bem sucedida
+        if ret:
+            # Converter o quadro de BGR para RGB usando a biblioteca cv2
+            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            # Detectar as faces no quadro usando a biblioteca face_recognition
+            face_locations = face_recognition.face_locations(rgb_frame)
+            # Obter as codificações das faces no quadro usando a biblioteca face_recognition
+            face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
+            # Para cada face detectada no quadro, fazer o seguinte
+            for face_location, face_encoding in zip(face_locations, face_encodings):
+                # Comparar a codificação da face com as codificações das faces conhecidas nos dados usando a biblioteca face_recognition
+                matches = face_recognition.compare_faces(list(faces.values()), face_encoding)
+                # Inicializar o nome da face como desconhecido
+                name = "Desconhecido"
+                # Se houver alguma correspondência, obter o nome correspondente aos dados
+                if True in matches:
+                    # Obter o índice da primeira correspondência na lista de correspondências
+                    match_index = matches.index(True)
+                    # Obter o nome correspondente aos dados usando o índice da correspondência
+                    name = list(faces.keys())[match_index]
+                # Desenhar um retângulo ao redor da face no quadro usando a biblioteca cv2
+                cv2.rectangle(frame, (face_location[3], face_location[0]), (face_location[1], face_location[2]), (0, 255, 0), 2)
+                # Escrever o nome da face no quadro usando a biblioteca cv2
+                cv2.putText(frame, name, (face_location[3], face_location[2] + 20), cv2.FONT_HERSHEY_PLAIN, 1.0, (0, 255, 0), 2)
+            # Mostrar o quadro em uma janela usando a biblioteca cv2
+            cv2.imshow("Reconhecimento Facial", frame)
+            # Aguardar uma tecla ser pressionada por 1 milissegundo usando a biblioteca cv2
+            key = cv2.waitKey(1)
+            # Se a tecla for ESC (código 27), sair do loop e encerrar o programa
+            if key == 27:
+                break
+        # Se a leitura não foi bem sucedida, imprimir uma mensagem de erro e encerrar o programa
+        else:
+            print("Erro ao ler da câmera")
+            break
+    # Liberar os recursos da câmera usando a biblioteca cv2
+    camera.release()
+    # Destruir todas as janelas abertas usando a biblioteca cv2
+    cv2.destroyAllWindows()
+# Se a câmera não estiver funcionando, imprimir uma mensagem de erro e encerrar o programa
+else:
+    print("Erro ao iniciar a câmera")

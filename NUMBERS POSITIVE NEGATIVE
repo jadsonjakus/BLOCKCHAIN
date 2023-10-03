@@ -1,0 +1,27 @@
+# Importar as bibliotecas matplotlib e numpy
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Gerar um número aleatório entre -10 e 100 e atribuí-lo à variável x
+x = np.random.randint(-10, 101)
+
+# Definir uma função color que retorna uma cor de acordo com o valor de x
+def color(x):
+    # Se x for positivo, retornar verde
+    if x > 0:
+        return "green"
+    # Se x for negativo, retornar vermelho
+    elif x < 0:
+        return "red"
+    # Se x for zero, retornar branco
+    else:
+        return "white"
+
+# Criar um gráfico com um ponto representando o valor de x usando a biblioteca matplotlib
+plt.scatter(0, 0, s=1000, c=color(x))
+
+# Criar uma barra de status com as cores verde e vermelho usando a biblioteca matplotlib
+plt.colorbar(plt.cm.ScalarMappable(cmap=plt.cm.RdYlGn))
+
+# Mostrar o gráfico na tela usando a biblioteca matplotlib
+plt.show()
