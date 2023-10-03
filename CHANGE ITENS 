@@ -1,0 +1,173 @@
+# Importar a biblioteca tkinter
+import tkinter as tk
+
+# Definir uma classe Item que representa um item que pode ser trocado
+class Item:
+    # O construtor da classe recebe os seguintes parâmetros:
+    # - name: o nome do item
+    # - description: a descrição do item
+    # - price: o preço do item em dinheiro virtual
+    def __init__(self, name, description, price):
+        # Atribuir os parâmetros aos atributos da classe
+        self.name = name
+        self.description = description
+        self.price = price
+
+    # Definir uma função __str__ que retorna uma representação em string do item
+    def __str__(self):
+        # Retornar uma string formatada com os atributos do item
+        return f"{self.name} - {self.description} - {self.price} DV"
+
+# Definir uma classe User que representa um usuário que pode trocar itens
+class User:
+    # O construtor da classe recebe os seguintes parâmetros:
+    # - name: o nome do usuário
+    # - balance: o saldo do usuário em dinheiro virtual
+    def __init__(self, name, balance):
+        # Atribuir os parâmetros aos atributos da classe
+        self.name = name
+        self.balance = balance
+
+        # Criar uma lista vazia para armazenar os itens do usuário
+        self.items = []
+
+    # Definir uma função create_item que cria um novo item e adiciona à lista de itens do usuário
+    def create_item(self, name, description, price):
+        # Criar uma instância da classe Item com os parâmetros fornecidos
+        item = Item(name, description, price)
+        # Adicionar o item à lista de itens do usuário
+        self.items.append(item)
+        # Retornar o item criado
+        return item
+
+    # Definir uma função buy_item que compra um item de outro usuário e atualiza os saldos dos usuários
+    def buy_item(self, item, seller):
+        # Verificar se o usuário tem saldo suficiente para comprar o item
+        if self.balance >= item.price:
+            # Subtrair o preço do item do saldo do usuário
+            self.balance -= item.price
+            # Adicionar o preço do item ao saldo do vendedor
+            seller.balance += item.price
+            # Remover o item da lista de itens do vendedor
+            seller.items.remove(item)
+            # Adicionar o item à lista de itens do usuário
+            self.items.append(item)
+            # Retornar True para indicar que a compra foi bem sucedida
+            return True
+        # Se não tiver saldo suficiente, retornar False para indicar que a compra falhou
+        else:
+            return False
+
+    # Definir uma função sell_item que vende um item para outro usuário e atualiza os saldos dos usuários
+    def sell_item(self, item, buyer):
+        # Verificar se o comprador tem saldo suficiente para comprar o item
+        if buyer.balance >= item.price:
+            # Subtrair o preço do item do saldo do comprador
+            buyer.balance -= item.price
+            # Adicionar o preço do item ao saldo do usuário
+            self.balance += item.price
+            # Remover o item da lista de itens do usuário
+            self.items.remove(item)
+            # Adicionar o item à lista de itens do comprador
+            buyer.items.append(item)
+            # Retornar True para indicar que a venda foi bem sucedida
+            return True
+        # Se não tiver saldo suficiente, retornar False para indicar que a venda falhou
+        else:
+            return False
+
+# Definir uma classe Exchange que representa o sistema de troca de itens 
+class Exchange:
+    # O construtor da classe não recebe nenhum parâmetro 
+    def __init__(self):
+        # Criar uma lista vazia para armazenar os usuários do sistema 
+        self.users = []
+
+        # Criar uma janela principal usando a biblioteca tkinter 
+        self.window = tk.Tk()
+        # Definir o título da janela 
+        self.window.title("Sistema de Troca de Itens")
+        # Definir o tamanho mínimo da janela 
+        self.window.minsize(600, 400)
+
+        # Criar um menu na janela usando a biblioteca tkinter 
+        self.menu = tk.Menu(self.window)
+        # Adicionar um item de menu chamado "Usuário" com as opções "Criar", "Selecionar" e "Sair" usando a biblioteca tkinter 
+        self.user_menu = tk.Menu(self.menu, tearoff=0)
+        self.user_menu.add_command(label="Criar", command=self.create_user)
+        self.user_menu.add_command(label="Selecionar", command=self.select_user)
+        self.user_menu.add_command(label="Sair", command=self.window.quit)
+        self.menu.add_cascade(label="Usuário", menu=self.user_menu)
+        # Configurar o menu da janela usando a biblioteca tkinter 
+        self.window.config(menu=self.menu)
+
+        # Criar um quadro na janela para mostrar as informações do usuário usando a biblioteca tkinter 
+        self.user_frame = tk.Frame(self.window)
+        self.user_frame.pack(side="top", fill="x")
+
+        # Criar uma etiqueta no quadro para mostrar o nome do usuário usando a biblioteca tkinter 
+        self.user_label = tk.Label(self.user_frame, text="Usuário: Nenhum")
+        self.user_label.pack(side="left")
+
+        # Criar uma etiqueta no quadro para mostrar o saldo do usuário usando a biblioteca tkinter 
+        self.balance_label = tk.Label(self.user_frame, text="Saldo: 0 DV")
+        self.balance_label.pack(side="right")
+
+        # Criar um quadro na janela para mostrar os itens do usuário usando a biblioteca tkinter 
+        self.item_frame = tk.Frame(self.window)
+        self.item_frame.pack(side="left", fill="y")
+
+        # Criar uma etiqueta no quadro para mostrar o título dos itens do usuário usando a biblioteca tkinter 
+        self.item_label = tk.Label(self.item_frame, text="Itens do Usuário")
+        self.item_label.pack()
+
+        # Criar uma lista no quadro para mostrar os itens do usuário usando a biblioteca tkinter 
+        self.item_list = tk.Listbox(self.item_frame)
+        self.item_list.pack(fill="y")
+
+        # Criar um botão no quadro para criar um novo item usando a biblioteca tkinter 
+        self.create_button = tk.Button(self.item_frame, text="Criar Item", command=self.create_item)
+        self.create_button.pack()
+
+        # Criar um quadro na janela para mostrar os itens dos outros usuários usando a biblioteca tkinter 
+        self.other_frame = tk.Frame(self.window)
+        self.other_frame.pack(side="right", fill="y")
+
+        # Criar uma etiqueta no quadro para mostrar o título dos itens dos outros usuários usando a biblioteca tkinter 
+        self.other_label = tk.Label(self.other_frame, text="Itens dos Outros Usuários")
+        self.other_label.pack()
+
+        # Criar uma lista no quadro para mostrar os itens dos outros usuários usando a biblioteca tkinter 
+        self.other_list = tk.Listbox(self.other_frame)
+        self.other_list.pack(fill="y")
+
+        # Criar um botão no quadro para comprar um item dos outros usuários usando a biblioteca tkinter 
+        self.buy_button = tk.Button(self.other_frame, text="Comprar Item", command=self.buy_item)
+        self.buy_button.pack()
+
+    # Definir uma função create_user que cria um novo usuário e adiciona à lista de usuários do sistema
+    def create_user(self):
+        # Criar uma janela secundária usando a biblioteca tkinter
+        user_window = tk.Toplevel(self.window)
+        
+         # Definir o título da janela
+         user_window.title("Criar Usuário")
+
+         # Definir o tamanho mínimo da janela
+         user_window.minsize(300, 200)
+
+         # Criar um quadro na janela para obter os dados do usuário usando a biblioteca tkinter
+         user_frame = tk.Frame(user_window)
+         user_frame.pack(padx=10, pady=10)
+
+         # Criar uma etiqueta no quadro para pedir o nome do usuário usando a biblioteca tkinter
+         name_label = tk.Label(user_frame, text="Nome:")
+         name_label.grid(row=0, column=0, sticky="w")
+
+         # Criar uma caixa de texto no quadro para digitar o nome do usuário usando a biblioteca tkinter
+         name_entry = tk.Entry(user_frame)
+         name_entry.grid(row=0, column=1)
+
+         # Criar uma etiqueta no quadro para pedir o saldo do usuário usando a biblioteca tkinter
+         balance_label = tk.Label(user_frame, text="Saldo:")
+         balance_label.grid
